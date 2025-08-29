@@ -1,42 +1,48 @@
-const express = require("express");
-const sqlite3 = require("sqlite3");
-const { open } = require("sqlite");
-const cors = require("cors");
+import sqlite3 from "sqlite3";
+import { open } from "sqlite";
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+// Global DB connection (reuse across calls)
+let dbPromise;
 
-(async () => {
-  const db = await open({
-    filename: "./mydb.sqlite",
-    driver: sqlite3.Database
-  });
+async function getDB() {
+  if (!dbPromise) {
+    dbPromise = open({
+      filename: "./mydb.sqlite",
+      driver: sqlite3.Database,
+    });
+    const db = await dbPromise;
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS profile (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT,
+        bio TEXT,
+        skills TEXT
+      )
+    `);
+  }
+  return dbPromise;
+}
 
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS profile (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      email TEXT,
-      bio TEXT,
-      skills TEXT
-    )
-  `);
+// API handler (works for both GET and POST)
+export default async function handler(req, res) {
+  const db = await getDB();
 
-  app.get("/profile", async (req, res) => {
+  if (req.method === "GET") {
     const profile = await db.get("SELECT * FROM profile LIMIT 1");
-    res.json(profile || { message: "No profile found" });
-  });
+    res.status(200).json(profile || { message: "No profile found" });
+  }
 
-  app.post("/profile", async (req, res) => {
+  else if (req.method === "POST") {
     const { name, email, bio, skills } = req.body;
     await db.run(
       "INSERT INTO profile (name, email, bio, skills) VALUES (?, ?, ?, ?)",
       [name, email, bio, skills]
     );
-    res.json({ status: "saved" });
-  });
+    res.status(200).json({ status: "saved" });
+  }
 
-  const PORT = 5000;
-  app.listen(PORT, () => console.log(`✅ API running on http://localhost:${PORT}`));
-})();
+  else {
+    res.status(405).json({ error: "Method not allowed" });
+  }
+}
