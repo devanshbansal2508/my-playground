@@ -5,43 +5,42 @@
 </head>
 <body>
   <h1>Query My Info</h1>
-
   <button onclick="getProfile()">Get Profile</button>
-
-  <h2>Add Info</h2>
-  <input id="name" placeholder="Name" /><br/>
-  <input id="email" placeholder="Email" /><br/>
-  <input id="bio" placeholder="Bio" /><br/>
-  <input id="skills" placeholder="Skills" /><br/>
-  <button onclick="addProfile()">Add Info</button>
-
+  <button onclick="addProfile()">Add My Info</button>
   <pre id="output"></pre>
 
   <script>
-    // API base (Vercel ke liye empty string)
-    const API_BASE = "";
+    const API_BASE = ""; // vercel mai same domain pai api call hogi
 
     async function getProfile() {
-      const res = await fetch(`${API_BASE}/api/profile`);
-      const data = await res.json();
-      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+      try {
+        const res = await fetch(`${API_BASE}/api/profile`);
+        const data = await res.json();
+        document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        alert("Error fetching profile");
+        console.error(err);
+      }
     }
 
     async function addProfile() {
-      const name = document.getElementById("name").value;
-      const email = document.getElementById("email").value;
-      const bio = document.getElementById("bio").value;
-      const skills = document.getElementById("skills").value;
+      const name = prompt("Enter your name:");
+      const email = prompt("Enter your email:");
+      const bio = prompt("Enter your bio:");
+      const skills = prompt("Enter your skills (comma separated):");
 
-      const res = await fetch(`${API_BASE}/api/profile`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, bio, skills })
-      });
-
-      const data = await res.json();
-      alert(data.status);
-      getProfile(); // add ke baad refresh list
+      try {
+        const res = await fetch(`${API_BASE}/api/profile`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, bio, skills })
+        });
+        const data = await res.json();
+        alert(data.status);
+      } catch (err) {
+        alert("Error adding profile");
+        console.error(err);
+      }
     }
   </script>
 </body>
