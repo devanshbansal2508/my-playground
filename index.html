@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Playground</title>
+</head>
+<body>
+  <h1>Query My Info</h1>
+  <button onclick="getProfile()">Get Profile</button>
+  <button onclick="addProfile()">Add My Info</button>
+  <pre id="output"></pre>
+
+  <script>
+    
+    const API_BASE = window.location.hostname === "localhost"
+      ? "http://localhost:5000"
+      : "";
+
+    async function getProfile() {
+      const res = await fetch(`${API_BASE}/api/profile`);
+      const data = await res.json();
+      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function addProfile() {
+      const res = await fetch(`${API_BASE}/api/profile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Devansh",
+          email: "devansh@example.com",
+          bio: "Final-year B.Tech CSE Student",
+          skills: "HTML, CSS, JS"
+        })
+      });
+      const data = await res.json();
+      alert(data.status);
+    }
+  </script>
+</body>
+</html>
